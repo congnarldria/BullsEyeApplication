@@ -1,0 +1,37 @@
+Version 4.8.2 03/01/2023
+
+Bug Fixes:
+-Removed timeout on serial reading function [BullEyeObject.py -> initiateIO()]
+-Added turnOffStream function in guidedMode. 
+-Ends streams before starting servo move (PrevClub, NextClub, Exiting from model select menu)
+-Fixed capture button in free mode [UIsharedFunctions.py -> captureImage]
+-Flipped Loft direction in order mode for bullseye indicator to match hossel bending direction
+[UIsharedFunction.py -> drawIndicator, drawIndicator2
+----------------------------------------------------------------------------------------------------
+ 
+Version 4.8.1   02/28/2023 [Servo Controller Change]
+-Works with Servo Controller Hub 2.8.1
+    -Removed "Time out" function in servo controller
+
+--------------------------------------------------------------------------------------------------------
+
+Version 4.8.1   02/18/2023
+-Works with Servo Controller Hub 2.8
+-Changed Order Mode data display
+    -Now uses a 'Tab' structure to toggle between BT Puck and Protractor
+    -Protractor Stream now draws onto BullsEye inidicator aswell, in a different color
+
+
+Bug Fix:
+-Added enable/disable button to servoLeft/servoRight button in order mode. 
+This prevents the Serial from bugging out when Servo is issued a move order while streaming in progress
+
+--------------------------------------------------------------------------------------------------------
+
+Version 4.8.0   01/31/2023
+-Works with Servo Controller Hub 2.8
+-Added force focus to popup menus
+-Added delay to certain popups to prevent double click bugs
+-Updated servo rotate function:
+    -Servo rotation quits when lock is engaged mid rotation
+    -When servo rotation stops due to error, frame angle is still updated to reflect the actual frame position

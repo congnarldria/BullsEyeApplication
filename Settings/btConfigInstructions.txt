@@ -1,0 +1,11 @@
+The BT Config Menu is made to allow users to swap between different BT bits without needing to update the log files manually. It also allows the user to connect and disconnect to the BT bits and check if they are responding. 
+
+Known Bugs: Streaming function will bug out if used more than twice. Resetting the BT bit using DISCONNECT DEVICE then CONNECT DEFAULT will resolve the issue. 
+
+Instructions
+Adding A Device: To add a device, enter the MAC address of the device on the keyboard above and press ADD. MAC addressess should be 12 letters long. Do not type out the ':' mark. The window will reset and the 
+new address will show up at the bottom of the address log. 
+
+BT Address Log: This lists all the addressess saved in the program. Todelete an address, press the DEL button next to the address. Pressing the SET button will set the address as the default address to connect to next time the unit boots up. 
+
+Connect Default: To connect to a different address, set the address to the default address by pressing SET from the address log. Then disconnect the current BT device connected by pressing DISCONNECT DEVICE. Finally, press CONNECT DEFAULT. The window will freeze briefly and the connectionresult will be shown in the terminal. 
