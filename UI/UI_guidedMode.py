@@ -1,18 +1,25 @@
 from tkinter import *
+
+import keyboard as KB
+import time
 from UI import UIsharedFunctions
+from pynput.keyboard import Key , Listener
+import RPi.GPIO as GPIO #test GPIO
+import threading
+import cv2
+from PIL import Image , ImageTk
+from tkinter import ttk
 
 class guidedMode(UIsharedFunctions.sharedFunctions):
     def __init__(self, master, BullsEye):
         self.master = master
         self.BullsEye = BullsEye
-
         #BT Pod LH/RH Radio Button Variables
         self.dex = IntVar()
 
         #Target Lie/Loft Offset Variables
         self.tgtLieOffset = 0
         self.tgtLoftOffset = 0
-
         #lock offset variable
         self.lockOffsetStatus = False
 
@@ -21,7 +28,12 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         self.updateOffSetValues('loft', 0)
         self.updateOffSetValues('lie', 0)
         self.frameAngle_entry.insert(END, self.BullsEye.frame)
-    
+        self.StartMultiPurposeThread()
+        self.showProt()
+        KB.add_hotkey("p", self.on_hotkey)
+        GPIO.add_event_detect(7, GPIO.RISING, callback=self.IO_callback, bouncetime=300)
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(7, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     #Fullscreen Mode: Stream video of clubface to capture offset
     def fullscreen_menu(self):
         self.fullscreenUI = Toplevel()
@@ -72,6 +84,28 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         self.updateFullscreenModelData()
         self.fullscreenUI.after(20, lambda cv=canvas: self.vidStreamStart(cv,offset=self.scoreOffsetFullscreen_entry, box=True, resize=(750, 450)))
 
+
+    def IO_callback(self , channel):
+        if self.GPIO.input(7):
+            print("it works")
+    Footpedal = True
+    def Footpedaltoogle(self):
+        self.Footpedal = not self.Footpedal
+        return self.Footpedal
+
+    def on_hotkey(self):
+        if self.Footpedaltoogle():
+            self.showBullsEye()
+        else:
+            self.showScoreView()
+
+    def MultiPurposeContext(self):
+        time.sleep(10)
+
+    def StartMultiPurposeThread(self):
+        self.MultiPurposeThread = threading.Thread(target=self.MultiPurposeContext)
+        self.MultiPurposeThread.start()
+        self.master.update_idletasks()
     def UI(self):
         self.frame = Frame(self.master)
         width, height = 490, 150
@@ -95,11 +129,11 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         
         self.protdata_frame = Frame(data_frame, width=width-10, height=190, bd=1, relief='ridge')
         self.protdata_frame.grid_propagate(0)
-        
+
         scoreLine_frame = LabelFrame(topRight_frame, text="Scoreline Detection", width=500, height=95, bd=1, relief='ridge')
         scoreLine_frame.grid_propagate(0)
-        bullsEyeIndicator_frame = Frame(btmRight_frame, bd=1, relief='ridge', bg="#D1D3D4")
-        exit_frame = Frame(btmRight_frame, width=120, height=210, bd=1, relief='ridge')
+        self.bullsEyeIndicator_frame = Frame(btmRight_frame, bd=1, relief='ridge', bg="#D1D3D4")
+        # exit_frame = Frame(btmRight_frame, width=120, height=210, bd=1, relief='ridge')
 
         left_frame.grid(row=0, column=0, rowspan=2)
         clubSetup_frame.grid(row=0, column=0, padx=10, pady=10)
@@ -109,9 +143,10 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         self.btdata_frame.grid(row=1, column=0, columnspan=2, padx=5)
         topRight_frame.grid(row=0, column=1)
         btmRight_frame.grid(row=1, column=1, sticky='W')
-        scoreLine_frame.grid(row=0, column=0, padx=5, pady=2)
-        bullsEyeIndicator_frame.grid(row=0, column=0, padx=5, pady=2, sticky='W')
-        exit_frame.grid(row=0, column=1, padx=5, pady=2)
+        scoreLine_frame.grid(row=0, column=0, padx=5, pady=2 , sticky='nw')
+        self.bullsEyeIndicator_frame.grid(row=0, column=0, padx=5, pady=2, sticky='nw')
+
+        # exit_frame.grid(row=0, column=1, padx=5, pady=2)
         self.frame.grid(row=0, column=0)
 
         #Club Selection Menu
@@ -171,11 +206,13 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         lockOffset_button.configure(command=lambda bt1=lockOffset_button, bt2=offsetButtons: self.toggleOffsetLock(bt1, bt2))
 
         #Tabscreen Control Buttons
-        showBT_button = Button(data_frame, text="BT Puck", font='Arial 20 bold', command=self.showBT)
-        showProt_button = Button(data_frame, text="Protractor", font='Arial 20 bold', command=self.showProt)
-        showBT_button.grid(row=0, column=0, padx=(5, 2), pady=5)
-        showProt_button.grid(row=0, column=1, padx=(2, 5), pady=5)
+        # showBT_button = Button(data_frame, text="BT Puck", font='Arial 20 bold', command=self.showBT)
+        # showProt_button = Button(data_frame, text="Protractor", font='Arial 20 bold', command=self.showProt)
+        # showBT_button.grid(row=0, column=0, padx=(5, 2), pady=5)
+        # showProt_button.grid(row=0, column=1, padx=(2, 5), pady=5)
+        showProt_button = Label(data_frame, text="Protractor", justify= "left", font='Arial 20 bold')
 
+        showProt_button.grid(row=0, column=0, padx=(2, 5), pady=5)
         #Frame for Protractor Data
         protractor_label = Label(self.protdata_frame, width=8, text='Prot.', font='Arial 16 bold', bg='black', fg='white')
         actual_label = Label(self.protdata_frame, width=6, text='Actual', font='Arial 16 bold', bg='black', fg='white')
@@ -206,7 +243,7 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         setMCREF_button = Button(self.protdata_frame, text="MC\nREF", font='Arial 12 bold', padx=1, width=8, height=2,
             command=lambda: self.setMCREF(self.lie_entry, self.loft_entry, self.frameAngle_entry))
 
-        protractor_label.grid(row=0, column=0, padx=6, pady=2)
+        protractor_label.grid(row=0, column=0, padx=6, pady=2, sticky ='nw')
         actual_label.grid(row=0, column=1, padx=6, pady=2, sticky='')
         target_label.grid(row=0, column=2, padx=6, pady=2, sticky='')
         diff_label.grid(row=0, column=3, padx=6, pady=2, sticky='')
@@ -266,7 +303,6 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         btTareValueZero_button.grid(row=2, column=4, padx=8, pady=1, sticky='', rowspan=2)
         prevClub_button.grid(row=3, column=2, padx=6, pady=1, sticky='')
         nextClub_button.grid(row=3, column=3, padx=6, pady=1, sticky='')
-
         self.BTmainEntry = (self.btLoft_entry, self.btLie_entry, self.btHeading_entry)
         self.BTdiffEntry = (self.diffLoft_entry, self.diffLie_entry)
 
@@ -280,11 +316,11 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         #Score detection && Servo Controller
         scoreOffset_label = Label(scoreLine_frame, text="Score", height=1, width=5, font='Arial 14 bold', bg='Black', fg='White')
         self.scoreOffset_entry = Entry(scoreLine_frame, width=5, font='Arial 14 bold')
-        captureOffset_button = Button(scoreLine_frame, text='Cap.\nOffset', height=2, width=4, font='Arial 14 bold')
-        fullscreen_button = Button(scoreLine_frame, text='Full\nScreen', height=2, width=4, font='Arial 14 bold')
-
-        captureOffset_button.configure(command=lambda cv=None: self.captureImg(None, offset=self.scoreOffset_entry))
-        fullscreen_button.configure(command=self.fullscreen_menu)
+        # captureOffset_button = Button(scoreLine_frame, text='Cap.\nOffset', height=2, width=4, font='Arial 14 bold')
+        # fullscreen_button = Button(scoreLine_frame, text='Full\nScreen', height=2, width=4, font='Arial 14 bold')
+        #
+        # captureOffset_button.configure(command=lambda cv=None: self.captureImg(None, offset=self.scoreOffset_entry))
+        # fullscreen_button.configure(command=self.fullscreen_menu)
 
         frameAngle_label = Label(scoreLine_frame, text="Frame", height=1, width=6, font='Arial 14 bold', bg='Black', fg='White')
         self.frameAngle_entry = Entry(scoreLine_frame, width=6, font='Arial 14 bold')
@@ -301,24 +337,50 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         
         scoreOffset_label.grid(row=0, column=0, padx=1, pady=0)
         self.scoreOffset_entry.grid(row=1, column=0, padx=1, pady=2)
-        captureOffset_button.grid(row=0, column=1, padx=1, pady=0, rowspan=2)
-        fullscreen_button.grid(row=0, column=2, padx=1, pady=0, rowspan=2)
-        frameAngle_label.grid(row=0, column=3, padx=3, pady=0)
-        self.frameAngle_entry.grid(row=1, column=3, padx=3, pady=2)
-        servoLeft_button.grid(row=0, column=4, padx=3, pady=0, rowspan=2)
-        servoRight_button.grid(row=0, column=5, padx=3, pady=0, rowspan=2)
-        enable_button.grid(row=0, column=6, padx=3, pady=0, rowspan=2)
-        
+        # captureOffset_button.grid(row=0, column=1, padx=1, pady=0, rowspan=2)
+        # fullscreen_button.grid(row=0, column=2, padx=1, pady=0, rowspan=2)
+        frameAngle_label.grid(row=0, column=1, padx=3, pady=0)
+        self.frameAngle_entry.grid(row=1, column=1, padx=3, pady=2)
+        servoLeft_button.grid(row=0, column=2, padx=3, pady=0, rowspan=2)
+        servoRight_button.grid(row=0, column=3, padx=3, pady=0, rowspan=2)
+        enable_button.grid(row=0, column=4, padx=3, pady=0, rowspan=2)
+
+        # tabControl to switch
+        self.tabControl = ttk.Notebook(self.bullsEyeIndicator_frame)
+        self.tabBullsEye = ttk.Frame(self.tabControl)
+        self.tabControl.add(self.tabBullsEye, text="BullsEye")
+        self.tabScore = ttk.Frame(self.tabControl)
+        self.tabControl.add(self.tabScore, text="ScoreView")
+        self.tabControl.pack(expand=1, fill="both")
+
+
         #BullsEye Display
-        self.bullsEye_canvas = Canvas(bullsEyeIndicator_frame, height=410, width=410)
+        self.bullsEye_canvas = Canvas(self.tabBullsEye ,height=410, width=410)
         self.bullsEye_canvas.create_image(205, 205, image=self.BullsEye.bullsEyeIndicator)
         self.bullsEye_canvas.grid(row=0, column=0)
 
-        # Exit Frame
-        exitApp_button = Button(exit_frame, command=lambda m=self.master: self.exitMenu(m))
+        # ScoreCanvas Display
+        self.Score_canvas = Label(self.tabScore, bg="black")
+        self.imgcv = cv2.imread("ScoreImageDefault.jpg")
+        self.tk_score = self.cv2Tk(self.imgcv)
+        self.Score_canvas.configure(image=self.tk_score)
+        self.Score_canvas.grid(row=0, column=0)
+        self.Score_canvas.image = self.tk_score
+
+
+        # Exit Frame put in scoreLine_frame
+        exitApp_button = Button(scoreLine_frame, command=lambda m=self.master: self.exitMenu(m))
         exitApp_button.config(image=self.BullsEye.mainMenu)
-        exitApp_button.grid(row=0, column=0, padx=1, pady=10)
-        
+        exitApp_button.grid(row=0, column=5, padx=1, pady=0 , rowspan=2)
+    def showScoreView(self):
+        self.tabControl.select(self.tabScore)
+        self.vidStreamStart(self.Score_canvas, offset=self.scoreOffset_entry, box=True)
+    def showBullsEye(self):
+        self.tabControl.select(self.tabBullsEye)
+    def cv2Tk(self, raw_cv):
+        raw_img = Image.fromarray(raw_cv)
+        raw_Tk = ImageTk.PhotoImage(image=raw_img.resize((500 , 410)))
+        return raw_Tk
     def showBT(self):
         self.protdata_frame.grid_forget()
         self.btdata_frame.grid_propagate(0)
@@ -532,6 +594,7 @@ class guidedMode(UIsharedFunctions.sharedFunctions):
         self.protTargetLie_entry.insert(END, lie)
     
     def exitModelSelectWindow(self):
+
         self.selectModelWindow.destroy()
         self.updateGuidedModeMenuModelData()
         self.seekAngleValue(self.BullsEye.currentModel.clubs[self.BullsEye.currentClubIndex].loft, self.frameAngle_entry)

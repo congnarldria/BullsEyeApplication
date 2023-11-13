@@ -166,7 +166,12 @@ class BullsEye():
         image = Image.open(path)
         image = ImageTk.PhotoImage(image)
         return image
-
+    def resizeimportimage(self , path , reizewh):
+        image = Image.open(path)
+        image = image.resize(reizewh)
+        image = ImageTk.PhotoImage(image)
+        return image
+        return image
     def loadIconImages(self):
         self.servoStrong = self.importImage("/home/pi/BullsEyeApplication/UI/icons/servoStrong.png")
         self.servoWeak = self.importImage("/home/pi/BullsEyeApplication/UI/icons/servoWeak.png")
@@ -178,3 +183,4 @@ class BullsEye():
         self.mainMenu = self.importImage("/home/pi/BullsEyeApplication/UI/icons/mainMenu.png")
         self.protractor = self.importImage("/home/pi/BullsEyeApplication/UI/icons/protractor.png")
         self.bullsEyeIndicator = self.importImage("/home/pi/BullsEyeApplication/UI/icons/bullsEyeIndicator.png")
+        # self.bullsEyeIndicator = self.resizeimportimage("/home/pi/BullsEyeApplication/UI/icons/bullsEyeIndicator.png", (500,410))

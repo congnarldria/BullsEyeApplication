@@ -39,7 +39,7 @@ class calibrationMode(UIsharedFunctions.sharedFunctions):
         bottom_frame = Frame(self.frame, width=1014, height=140)
         bottom_frame.grid_propagate(0)
 
-        canvas_frame = Frame(left_frame, width=500, height=300, bg='white')
+        canvas_frame = Frame(left_frame, width=500, height=300, bg='black')
         canvas_frame.grid_propagate(0)
 
         lieCal_frame = LabelFrame(left_frame, text="Lie Angle Calirbation", width=500, height=140, bd=1, relief='ridge')
@@ -83,18 +83,20 @@ class calibrationMode(UIsharedFunctions.sharedFunctions):
         loftCal_frame.grid(row=2, column=0, pady=(5, 0), columnspan=2)
 
         # Canvas for Image
-        canvas = Label(canvas_frame, bg='white')
+        canvas = Label(canvas_frame, bg='black')
         canvas.grid(row=0, column=0, sticky=N)
-
+        self.canvas = Label(canvas_frame,width = 500 , height = 300 , bg='black')
+        # self.canvas.create_text(200, 130, text="No Image", fill="red", font=('Helvetica 15 bold'))
+        self.canvas.grid(row=0, column=0, sticky=N)
         # Camera Controls
-        stream_button = Button(cameraControl_frame, text="Stream", height=2, width=6, font='Arial 12 bold')
-        capture_button = Button(cameraControl_frame, text="Capture", height=2, width=6, font='Arial 12 bold')
+        self.stream_button = Button(cameraControl_frame, text="Stream", height=2, width=6, font='Arial 12 bold')
+        self.capture_button = Button(cameraControl_frame, text="Capture", height=2, width=6, font='Arial 12 bold')
         brightDwn_button = Button(cameraControl_frame, command=lambda v='-': self.brightnessAdjust(v))
         brightDwn_button.configure(image=self.BullsEye.brightDwn)
         brightUp_button = Button(cameraControl_frame, command=lambda v='+': self.brightnessAdjust(v))
         brightUp_button.configure(image=self.BullsEye.brightUp)
-        stream_button.grid(row=0, column=0, padx=5, pady=2)
-        capture_button.grid(row=0, column=1, padx=5, pady=2)
+        self.stream_button.grid(row=0, column=0, padx=5, pady=2)
+        self.capture_button.grid(row=0, column=1, padx=5, pady=2)
         brightDwn_button.grid(row=0, column=2, padx=5, pady=2)
         brightUp_button.grid(row=0, column=3, padx=5, pady=2)
 
@@ -279,12 +281,13 @@ class calibrationMode(UIsharedFunctions.sharedFunctions):
         originZeroUp_button.grid(row=4, column=8, padx=5, pady=2, sticky=W, rowspan=2)
 
         # Button Commands
-        stream_button.config(
-            command=lambda c=canvas, of=self.calOffset_entry, zr=self.zeroLine_entry: self.vidStreamStart(c, offset=of,
-                                                                                                          zero=zr,
-                                                                                                          box=True))
-        capture_button.config(
-            command=lambda c=canvas, of=self.calOffset_entry, zr=self.zeroLine_entry: self.captureImg(c, offset=of,
+        # stream_button.config(
+        #     command=lambda c=canvas, of=self.calOffset_entry, zr=self.zeroLine_entry: self.vidStreamStart(c, offset=of,
+        #                                                                                                   zero=zr,
+        #                                                                                                   box=True))
+        self.stream_button.config(command=self.StreamSwitch)
+        self.capture_button.config(
+            command=lambda c=self.canvas, of=self.calOffset_entry, zr=self.zeroLine_entry: self.captureImg(c, offset=of,
                                                                                                       zero=zr))
         brightUp_button.config(command=lambda v='+': self.brightnessAdjust(v))
         brightDwn_button.config(command=lambda v='-': self.brightnessAdjust(v))
@@ -321,8 +324,22 @@ class calibrationMode(UIsharedFunctions.sharedFunctions):
         self.calStickVal_entry.insert(0, self.BullsEye.calStickVal)
         self.lieOffset = 0
         self.frame.grid(row=0, column=0)
+#global is_on
+        self.is_on = False
+        #self.vidStreamStart(canvas, offset = self.calOffset_entry , zero = self.zeroLine_entry, box=True)
+    def StreamSwitch(self):
+        if self.is_on:
+            self.stream_button.config(text = "Stream")
+            self.is_on = False
+            self.captureImg(self.captureImg(self.canvas, offset=self.zeroLine_entry, zero=self.zeroLine_entry))
+            self.capture_button["state"] = NORMAL
+        else:
+            self.vidStreamStart(self.canvas, offset=self.calOffset_entry, zero=self.zeroLine_entry, box=True)
+            if self.BullsEye.vidStreamActive:
+                self.capture_button["state"] = DISABLED
+                self.stream_button.config(text="Stop")
+                self.is_on = True
 
-        self.vidStreamStart(canvas, offset = self.calOffset_entry , zero = self.zeroLine_entry, box=True)
 
     def updateZeroLine(self):
         # round(math.atan(self.BullsEye.avgScoreLineSlope) * (180 / math.pi), 1)

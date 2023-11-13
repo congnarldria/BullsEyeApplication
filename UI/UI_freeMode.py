@@ -47,7 +47,7 @@ class freeMode(UIsharedFunctions.sharedFunctions):
         toolTipZero_label.grid(row=2, column=0, pady=0, sticky=NW)
 
         # Stream control buttons
-        button_streamStart = Button(streamCMD_frame, width=5, height=2, text="Stream", font='Arial 13 bold', command=lambda : self.vidStreamStart(canvas, box=False))
+        button_streamStart = Button(streamCMD_frame, width=5, height=2, text="Stream", font='Arial 13 bold', command=lambda : self.vidStreamStart(canvas,offset=lieOffset_entry, box=False))
         button_showRaw = Button(streamCMD_frame, width=5, height=2, text="Raw", font='Arial 13 bold', command=lambda cv=canvas: self.showRaw(cv))
         button_showScore = Button(streamCMD_frame, width=5, height=2, text="Score", font='Arial 13 bold', command=lambda cv=canvas: self.showScore(cv))
         button_capture = Button(streamCMD_frame, width=5, height=2, text="Screen \n Cap", font='Arial 13 bold')

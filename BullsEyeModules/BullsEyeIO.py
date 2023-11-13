@@ -32,12 +32,14 @@ import serial
 
 class rpiCam():
     def __init__(self):
-        self.camera = PiCamera()
-        self.camera.resolution = (640, 480)
-        self.camera.framerate = 40
-        self.tk_raw = None
-        self.tk_score = None
-
+        try:
+            self.camera = PiCamera()
+            self.camera.resolution = (640, 480)
+            self.camera.framerate = 40
+            self.tk_raw = None
+            self.tk_score = None
+        except :
+            print("Error open camera")
     def captureStill(self):  # returns in openCV image format
         rawCapture = PiRGBArray(camera, size=(640, 480))
         self.camera.capture(rawCapture, format='bgr')
